@@ -41,9 +41,9 @@ public class WordToNumber {
 
     public static int wordsToNumber(String text) {
 
-        
+        try {
 
-        String[] words = text.toLowerCase().split("\\s+");
+             String[] words = text.toLowerCase().split("\\s+");
 
         int result = 0;
         int current = 0;
@@ -72,5 +72,15 @@ public class WordToNumber {
         }
 
         return result + current;
+            
+        } catch (Exception e) {
+            return -1;
+        }
+
+       
+    }
+
+    public static void main(String[] args) {
+           System.out.println(WordToNumber.wordsToNumber("Hello"));
     }
 }
