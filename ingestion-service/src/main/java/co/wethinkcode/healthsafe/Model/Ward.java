@@ -1,18 +1,40 @@
 package co.wethinkcode.healthsafe.Model;
 
+import java.util.Arrays;
+
 public class Ward {
     
     private String wardId;
     private String wing;
     private String department;
-    private String bedsAvailable;
-
+    private int bedsAvailable;
+    private String[] missingvalues = {"N/A", "n/a", "TBD", "unknown", "-", "NaN","full"};
+  
 
     public Ward(String wardId, String wing, String department, String bedsAvailable) {
         this.wardId = wardId;
         this.wing = wing;
         this.department = department;
-        this.bedsAvailable = bedsAvailable;
+
+        try{
+
+            int value = Integer.parseInt(bedsAvailable);
+            if(value < 0){
+                this.bedsAvailable = 0;
+            }else{
+                this.bedsAvailable = value;
+            }
+
+        }catch(NumberFormatException e){
+
+            if(Arrays.asList(missingvalues).contains(bedsAvailable)){
+                this.bedsAvailable = 0;
+            }else{
+                this.bedsAvailable = WordToNumber.wordsToNumber(bedsAvailable);
+            }
+
+        }
+        
     }
 
 
@@ -31,7 +53,7 @@ public class Ward {
     }
 
 
-    public String getBedsAvailable() {
+    public int getBedsAvailable() {
         return bedsAvailable;
     }
 
@@ -43,6 +65,8 @@ public class Ward {
             ", specialty='" + this.department + '\'' +
             ", beds='" + this.bedsAvailable + '\'' +
             '}';
-}
+    }
+
+   
     
 }

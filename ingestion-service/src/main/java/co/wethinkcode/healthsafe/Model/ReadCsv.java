@@ -72,6 +72,12 @@ public class ReadCsv {
       return Collections.unmodifiableList(wards);
    }
 
+    public static void main(String[] args) {
+        ReadCsv test = new ReadCsv("/home/wtc/Desktop/Elective projects/sin-000-healthsafe/ingestion-service/src/main/resources/wards-outdated.csv");
+        for(Ward i: test.getWards()){
+         System.out.println(i);
+        }
+    }
 
 }
   
