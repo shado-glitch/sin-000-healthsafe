@@ -8,6 +8,7 @@ public class IngestionServiceApp {
         Javalin app = Javalin.create().start(7030);
 
         app.get("/health", ctx -> ctx.result("OK"));
+        app.get("/somethingfun",ctx -> ctx.result("Java web app"));
 
         // TODO: read and clean src/main/resources/wards-outdated.csv (wards, wings, specialist departments data —
         // trim whitespace, fix casing, normalize dates/booleans) and expose the
