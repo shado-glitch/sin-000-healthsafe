@@ -7,7 +7,7 @@ public class Ward {
     private String wardId;
     private String wing;
     private String department;
-    private int bedsAvailable;
+    private String bedsAvailable;
     private String[] missingvalues = {"N/A", "n/a", "TBD", "unknown", "-", "NaN","full"};
   
 
@@ -15,25 +15,15 @@ public class Ward {
         this.wardId = wardId;
         this.wing = wing;
         this.department = department;
-
-        try{
-
-            int value = Integer.parseInt(bedsAvailable);
-            if(value < 0){
-                this.bedsAvailable = 0;
-            }else{
-                this.bedsAvailable = value;
-            }
-
-        }catch(NumberFormatException e){
-
-            if(Arrays.asList(missingvalues).contains(bedsAvailable)){
-                this.bedsAvailable = 0;
-            }else{
-                this.bedsAvailable = WordToNumber.wordsToNumber(bedsAvailable);
-            }
-
+        
+        if(Arrays.asList(missingvalues).contains(bedsAvailable)){
+            this.bedsAvailable = null;
+        }else{
+            this.bedsAvailable = bedsAvailable;
         }
+
+
+        
         
     }
 
@@ -53,7 +43,7 @@ public class Ward {
     }
 
 
-    public int getBedsAvailable() {
+    public String getBedsAvailable() {
         return bedsAvailable;
     }
 
