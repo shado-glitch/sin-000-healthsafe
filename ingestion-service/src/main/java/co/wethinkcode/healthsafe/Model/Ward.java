@@ -2,6 +2,8 @@ package co.wethinkcode.healthsafe.Model;
 
 import java.util.Arrays;
 
+import co.wethinkcode.healthsafe.service.WordToNumber;
+
 public class Ward {
     
     private String wardId;
@@ -9,6 +11,8 @@ public class Ward {
     private String department;
     private String bedsAvailable;
     private String notes;
+
+
     private String[] missingvalues = {"N/A", "n/a", "TBD", "unknown", "-", "NaN","full"};
   
 
@@ -40,19 +44,23 @@ public class Ward {
         } 
     }
 
+    public String getNotes() {
+        return notes;
+    }
+
 
     public String getWardId() {
-        return wardId;
+        return wardId.trim().replaceAll("\\s+"," ");
     }
 
 
     public String getWing() {
-        return wing;
+        return wing.trim().replaceAll("\\s+"," ");
     }
 
 
     public String getDepartment() {
-        return department;
+        return department.trim().replaceAll("\\s+"," ");
     }
 
 
@@ -67,20 +75,41 @@ public class Ward {
 
     @Override
     public String toString() {
-    return "Ward{" +
-            " wardId=' " + this.getWardId() + '\'' +
-            ", wing=' " + this.getWing() + '\'' +
-            ", department=' " + this.getDepartment() +'\'' +
-            ", bedsAvailable= '" + this.getBedsAvailable() + '\'' +
-            ", notes= '"+this.notes+ '\'' +
+
+
+    return "Ward{" + "\n"+
+        "wardId: " + this.getWardId() +"," + "\n" +
+        "wing: " + this.getWing() +  "," + "\n" + 
+        "department: " + this.getDepartment() +"," +"\n"+
+        "bedsAvailable: " + this.getBedsAvailable() +","+"\n" +
+        "notes: "+this.notes+ "\n" +
             '}';
     }
 
+    @Override
+    public boolean equals(Object obj){
+        if(this == obj){
+            return true;
+        }
+        if(obj == null || this.getClass() != obj.getClass()){
+            return false;
+        };
+
+        Ward other = (Ward) obj;
+
+        boolean WardId = this.getWardId().equalsIgnoreCase(other.getWardId());
+        boolean wing = (this.getWing()).equalsIgnoreCase(other.getWing());
+
+        return WardId && wing;
+    }
+ 
 
 
     public static void main(String[] args){
-        Ward eWard = new Ward("w-17", "North wing", "ICU", "hello");
+        Ward eWard = new Ward("w-17", "North    wing", "ICU", "hello");
+        Ward bward = new Ward("W-17", "north wing ","icu","2");
         System.out.println(eWard.toString());
+        System.out.println(eWard.equals(bward));
     }
 
    

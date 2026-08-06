@@ -1,4 +1,4 @@
-package co.wethinkcode.healthsafe.Model;
+package co.wethinkcode.healthsafe.service;
 
 import java.io.BufferedReader;
 import java.io.FileReader;
@@ -6,6 +6,8 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+
+import co.wethinkcode.healthsafe.Model.Ward;
 
 
 public class ReadCsv {
@@ -30,7 +32,7 @@ public class ReadCsv {
                while((this.line = reader.readLine()) != null){
 
                   String [] row =line.split(",");
-                  Ward ward = new Ward(row[0], row[1], row[2], row[3]);
+                  Ward ward = new Ward(row[0].trim(), row[1].trim(), row[2].trim(), row[3].trim());
                      this.addWard(ward);
                }
                
@@ -38,7 +40,6 @@ public class ReadCsv {
          }catch(Exception e){
 
                e.printStackTrace();
-
          }finally{
 
                try {
@@ -50,6 +51,19 @@ public class ReadCsv {
             
          }
 
+   }
+
+   public ArrayList<Ward> cleanCsv(){
+      ArrayList<Ward> cleanWards = new ArrayList<Ward>();
+
+      for(int i = 0; i < this.getWards().size();i++){
+
+         if(!(cleanWards.contains(this.getWards().get(i)))){
+            cleanWards.add(this.getWards().get(i));
+         } 
+        }
+
+      return cleanWards ;
    }
 
    public void addWard(Ward ward){
@@ -74,9 +88,19 @@ public class ReadCsv {
 
     public static void main(String[] args) {
         ReadCsv test = new ReadCsv("/home/wtc/Desktop/Elective projects/sin-000-healthsafe/ingestion-service/src/main/resources/wards-outdated.csv");
+        /* 
         for(Ward i: test.getWards()){
          System.out.println(i);
         }
+
+        */
+
+       ArrayList<Ward> test1 = test.cleanCsv();
+
+       for(Ward i : test1){
+         System.out.println(i);
+         System.out.println();
+       }
     }
 
 }

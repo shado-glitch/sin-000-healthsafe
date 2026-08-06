@@ -1,4 +1,4 @@
-package co.wethinkcode.healthsafe.Model;
+package co.wethinkcode.healthsafe.service;
 
 import java.util.HashMap;
 import java.util.Map;
