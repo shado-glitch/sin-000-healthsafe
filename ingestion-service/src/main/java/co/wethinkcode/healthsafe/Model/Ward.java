@@ -77,7 +77,7 @@ public class Ward {
     public String toString() {
 
 
-    return "Ward{" + "\n"+
+    return "{" + "\n"+
         "wardId: " + this.getWardId() +"," + "\n" +
         "wing: " + this.getWing() +  "," + "\n" + 
         "department: " + this.getDepartment() +"," +"\n"+
@@ -105,12 +105,7 @@ public class Ward {
  
 
 
-    public static void main(String[] args){
-        Ward eWard = new Ward("w-17", "North    wing", "ICU", "hello");
-        Ward bward = new Ward("W-17", "north wing ","icu","2");
-        System.out.println(eWard.toString());
-        System.out.println(eWard.equals(bward));
-    }
+    
 
    
     

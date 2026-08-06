@@ -80,7 +80,4 @@ public class WordToNumber {
        
     }
 
-    public static void main(String[] args) {
-           System.out.println(WordToNumber.wordsToNumber("Hello"));
-    }
 }
