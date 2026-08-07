@@ -1,7 +1,7 @@
 package co.wethinkcode.healthsafe;
 
+import co.wethinkcode.healthsafe.controller.WardService;
 import co.wethinkcode.healthsafe.service.ReadCsv;
-import co.wethinkcode.healthsafe.service.WardService;
 import io.javalin.Javalin;
 
 public class IngestionServiceApp {
