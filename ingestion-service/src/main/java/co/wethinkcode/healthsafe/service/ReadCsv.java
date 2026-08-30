@@ -1,95 +1,89 @@
 package co.wethinkcode.healthsafe.service;
 
-import java.io.BufferedReader;
-import java.io.FileReader;
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-
 import co.wethinkcode.healthsafe.Model.Ward;
 
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.util.ArrayList;
+import java.util.List;
 
 public class ReadCsv {
 
-   private String filepath ;
-   private BufferedReader reader;
-   private String line;
-   private ArrayList<Ward> wards;
+    private final List<Ward> wards = new ArrayList<>();
 
+    public ReadCsv(String filename) {
 
-   public ReadCsv(String filepath){
-    this.filepath = filepath;
-    this.reader = null;
-    this.line = "";
-    this.wards = new ArrayList<Ward>();
+        InputStream inputStream =
+                getClass().getClassLoader().getResourceAsStream(filename);
 
-         try{
-               reader = new BufferedReader(new FileReader(this.getFilepath()));
-
-               reader.readLine();
-
-               while((this.line = reader.readLine()) != null){
-
-                  String [] row =line.split(",");
-                  Ward ward = new Ward(row[0].trim(), row[1].trim(), row[2].trim(), row[3].trim());
-                     this.addWard(ward);
-               }
-               
-
-         }catch(Exception e){
-
-               e.printStackTrace();
-         }finally{
-
-               try {
-                  reader.close();
-               } catch (IOException e) {
-         
-                  e.printStackTrace();
-               }
-            
-         }
-
-   }
-
-   public ArrayList<Ward> cleanCsv(){
-      ArrayList<Ward> cleanWards = new ArrayList<Ward>();
-
-      for(int i = 0; i < this.getWards().size();i++){
-
-         if(!(cleanWards.contains(this.getWards().get(i)))){
-            cleanWards.add(this.getWards().get(i));
-         } 
+        if (inputStream == null) {
+            throw new IllegalArgumentException(
+                    "Could not find CSV file: " + filename
+            );
         }
 
-      return cleanWards ;
-   }
+        try (BufferedReader reader =
+                     new BufferedReader(new InputStreamReader(inputStream))) {
 
-   public void addWard(Ward ward){
-      wards.add(ward);
-   }
+            // Skip header
+            reader.readLine();
 
-   public String getFilepath() {
-    return filepath;
-   }
+            String line;
 
-   public BufferedReader getReader() {
-      return reader;
-   }
+            while ((line = reader.readLine()) != null) {
 
-   public String getLine() {
-      return line;
-   }
+                if (line.trim().isEmpty()) {
+                    continue;
+                }
 
-   public List<Ward> getWards() {
-      return Collections.unmodifiableList(wards);
-   }
+                String[] row = line.split(",", -1);
 
- 
+                if (row.length < 4) {
+                    System.out.println(
+                            "Skipping malformed row: " + line
+                    );
+                    continue;
+                }
 
+                Ward ward = new Ward(
+                        row[0],
+                        row[1],
+                        row[2],
+                        row[3]
+                );
 
-   
+                addWardIfNotDuplicate(ward);
+            }
 
+        } catch (IOException e) {
+
+            throw new RuntimeException(
+                    "Could not read CSV file", e
+            );
+        }
+    }
+
+    private void addWardIfNotDuplicate(Ward ward) {
+
+        for (Ward existingWard : wards) {
+
+            if (existingWard.equals(ward)) {
+
+                System.out.println(
+                        "Duplicate ward detected: "
+                                + ward.getWardId()
+                );
+
+                return;
+            }
+        }
+
+        wards.add(ward);
+    }
+
+    public List<Ward> getWards() {
+        return new ArrayList<>(wards);
+    }
 }
-  
