@@ -25,7 +25,7 @@ public class ReadCsv {
         }
 
         try (CSVReader reader = new CSVReader(new InputStreamReader(inputStream))) {
-            // The first row contains the column headings.
+          
             reader.readNext();
 
             String[] row;

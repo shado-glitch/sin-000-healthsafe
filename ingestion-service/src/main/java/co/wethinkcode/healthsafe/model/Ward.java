@@ -107,8 +107,7 @@ public class Ward {
                 notes = null;
             }
         } catch (NumberFormatException e) {
-            // Spelled-out values such as "five" are deliberately flagged,
-            // rather than guessed or silently converted.
+          
             bedsAvailable = null;
             notes = "bedsAvailable was non-numeric ('"
                     + cleaned + "') — flagged for follow-up";
