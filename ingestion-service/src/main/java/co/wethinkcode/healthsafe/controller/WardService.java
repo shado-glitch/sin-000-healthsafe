@@ -1,34 +1,19 @@
 package co.wethinkcode.healthsafe.controller;
 
-import java.util.ArrayList;
-
 import co.wethinkcode.healthsafe.Model.Ward;
 import co.wethinkcode.healthsafe.service.ReadCsv;
 
+import java.util.List;
+
 public class WardService {
 
-    private ArrayList<Ward> cleanRecords = new ArrayList<Ward>()  ;
+    private final List<Ward> wards;
 
-    public WardService(ReadCsv readCsvObject){
-
-        this.cleanRecords = new ArrayList<>(readCsvObject.getWards());
+    public WardService(ReadCsv readCsv) {
+        this.wards = readCsv.getWards();
     }
 
-    @Override
-
-    public String toString(){
-
-        String[] data = {"[","]"};
-        String results = data[0];
-
-        for(Ward ward : cleanRecords){
-            results = results + "\n"+ "\n" + ward +",";
-        }
-        
-
-
-        return (results.substring(0,(results.length()-1))+"\n" + data[1]);
+    public List<Ward> getWards() {
+        return wards;
     }
-
-    
 }
