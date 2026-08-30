@@ -3,7 +3,6 @@ package co.wethinkcode.healthsafe;
 import co.wethinkcode.healthsafe.controller.WardService;
 import co.wethinkcode.healthsafe.service.ReadCsv;
 import io.javalin.Javalin;
-import com.fasterxml.jackson.databind.ObjectMapper;
 
 
 
@@ -12,8 +11,8 @@ public class IngestionServiceApp {
 
     public static void main(String[] args) {
 
-        WardService twst = new WardService(new ReadCsv("wards-outdated.csv"));
-        ObjectMapper objectMapper = new ObjectMapper();
+        ReadCsv readCsv = new ReadCsv("wards-outdated.csv");
+        WardService wardService = new WardService(readCsv);
 
         Javalin app = Javalin.create().start(7030);
 
@@ -23,20 +22,8 @@ public class IngestionServiceApp {
         // trim whitespace, fix casing, normalize dates/booleans) and expose the
         // cleaned records here for the other services to consume.
         
-        app.get("/wards", ctx -> {
-
-            try{
-                String json =
-                        objectMapper.writeValueAsString(
-                                wardService.getWards()
-                        );
-
-                ctx.contentType("application/json");
-                ctx.result(json);
-                }catch(Exception e){
-                    ctx.status(500);
-                    ctx.result("could not create Json");                }
-        });
+       app.get("/wards", ctx -> ctx.json(wardService.getWards()));
+       
 
     }
 }

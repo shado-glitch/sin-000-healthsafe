@@ -29,42 +29,54 @@ public class Ward {
     }
 
     private String cleanName(String value) {
-
         if (value == null) {
             return null;
         }
 
-        value = value.trim().replaceAll("\\s+", " ");
+        String cleaned = value.trim().replaceAll("\\s+", " ");
 
-        if (value.isEmpty()) {
+        if (cleaned.isEmpty() || isPlaceholder(cleaned)) {
             return null;
         }
 
-        String[] words = value.toLowerCase().split(" ");
-        String result = "";
+        String[] words = cleaned.toLowerCase().split(" ");
+        StringBuilder result = new StringBuilder();
 
         for (String word : words) {
-
-            if (!word.isEmpty()) {
-                result += Character.toUpperCase(word.charAt(0))
-                        + word.substring(1) + " ";
+            if (word.isEmpty()) {
+                continue;
             }
+
+            if (result.length() > 0) {
+                result.append(" ");
+            }
+
+            result.append(Character.toUpperCase(word.charAt(0)))
+                    .append(word.substring(1));
         }
 
-        return result.trim();
+        return result.toString();
+    }
+
+    private boolean isPlaceholder(String value) {
+        String lowerValue = value.trim().toLowerCase();
+
+        return lowerValue.equals("n/a")
+                || lowerValue.equals("tbd")
+                || lowerValue.equals("unknown")
+                || lowerValue.equals("-")
+                || lowerValue.equals("nan");
     }
 
     private void cleanBeds(String value) {
-
         if (value == null || value.trim().isEmpty()) {
             bedsAvailable = null;
             notes = "bedsAvailable was missing — flagged for follow-up";
             return;
         }
 
-        value = value.trim();
-
-        String lowerValue = value.toLowerCase();
+        String cleaned = value.trim();
+        String lowerValue = cleaned.toLowerCase();
 
         if (lowerValue.equals("n/a")
                 || lowerValue.equals("tbd")
@@ -75,39 +87,35 @@ public class Ward {
 
             bedsAvailable = null;
             notes = "bedsAvailable was a placeholder ('"
-                    + value + "') — flagged for follow-up";
+                    + cleaned + "') — flagged for follow-up";
             return;
         }
 
         try {
-
-            int number = Integer.parseInt(value);
+            int number = Integer.parseInt(cleaned);
 
             if (number < 0) {
-
                 bedsAvailable = null;
                 notes = "bedsAvailable was negative ('"
-                        + value + "') — flagged for follow-up";
-
+                        + cleaned + "') — flagged for follow-up";
             } else if (number > 1000) {
-
                 bedsAvailable = null;
                 notes = "bedsAvailable was unrealistic ('"
-                        + value + "') — flagged for follow-up";
-
+                        + cleaned + "') — flagged for follow-up";
             } else {
-
                 bedsAvailable = number;
                 notes = null;
             }
-
         } catch (NumberFormatException e) {
-
+            // Spelled-out values such as "five" are deliberately flagged,
+            // rather than guessed or silently converted.
             bedsAvailable = null;
             notes = "bedsAvailable was non-numeric ('"
-                    + value + "') — flagged for follow-up";
+                    + cleaned + "') — flagged for follow-up";
         }
     }
+
+   
 
     public String getWardId() {
         return wardId;
