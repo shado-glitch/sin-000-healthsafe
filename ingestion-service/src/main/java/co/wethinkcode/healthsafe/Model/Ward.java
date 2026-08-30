@@ -1,112 +1,152 @@
 package co.wethinkcode.healthsafe.Model;
 
-import java.util.Arrays;
-
-import co.wethinkcode.healthsafe.service.WordToNumber;
-
 public class Ward {
-    
+
     private String wardId;
     private String wing;
     private String department;
-    private String bedsAvailable;
+    private Integer bedsAvailable;
     private String notes;
 
-
-    private String[] missingvalues = {"N/A", "n/a", "TBD", "unknown", "-", "NaN","full"};
-  
-
     public Ward(String wardId, String wing, String department, String bedsAvailable) {
-        this.wardId = wardId;
-        this.wing = wing;
-        this.department = department;
-        
-        
-        if(this.returnNegativeSymbol().equals(bedsAvailable.substring(0,1))){
 
-            this.bedsAvailable = null ;
-            this.notes = "bedsAvailable was  non-positive numeric('" + bedsAvailable + "')  — flagged for follow-up" ; 
+        this.wardId = cleanId(wardId);
+        this.wing = cleanName(wing);
+        this.department = cleanName(department);
 
-        }else if(Arrays.asList(missingvalues).contains(bedsAvailable) || (bedsAvailable == null && bedsAvailable.isEmpty())){
+        cleanBeds(bedsAvailable);
+    }
 
-            this.notes ="bedsAvailable was non-numeric (" + bedsAvailable + ") — flagged for follow-up";
-            this.bedsAvailable = null;
+    private String cleanId(String value) {
 
-        }else if(WordToNumber.wordsToNumber(bedsAvailable) !=  -1){
+        if (value == null) {
+            return null;
+        }
 
-    
-            this.bedsAvailable = Integer.toString(WordToNumber.wordsToNumber(bedsAvailable));
-            this.notes = "bedsAvailable was non-numeric (" + bedsAvailable + ") — flagged for follow-up";
-            
-             
-        }else {
-            this.bedsAvailable = bedsAvailable;
-        } 
+        return value.trim()
+                .replaceAll("\\s+", "")
+                .toUpperCase();
+    }
+
+    private String cleanName(String value) {
+
+        if (value == null) {
+            return null;
+        }
+
+        value = value.trim().replaceAll("\\s+", " ");
+
+        if (value.isEmpty()) {
+            return null;
+        }
+
+        String[] words = value.toLowerCase().split(" ");
+        String result = "";
+
+        for (String word : words) {
+
+            if (!word.isEmpty()) {
+                result += Character.toUpperCase(word.charAt(0))
+                        + word.substring(1) + " ";
+            }
+        }
+
+        return result.trim();
+    }
+
+    private void cleanBeds(String value) {
+
+        if (value == null || value.trim().isEmpty()) {
+            bedsAvailable = null;
+            notes = "bedsAvailable was missing — flagged for follow-up";
+            return;
+        }
+
+        value = value.trim();
+
+        String lowerValue = value.toLowerCase();
+
+        if (lowerValue.equals("n/a")
+                || lowerValue.equals("tbd")
+                || lowerValue.equals("unknown")
+                || lowerValue.equals("-")
+                || lowerValue.equals("nan")
+                || lowerValue.equals("full")) {
+
+            bedsAvailable = null;
+            notes = "bedsAvailable was a placeholder ('"
+                    + value + "') — flagged for follow-up";
+            return;
+        }
+
+        try {
+
+            int number = Integer.parseInt(value);
+
+            if (number < 0) {
+
+                bedsAvailable = null;
+                notes = "bedsAvailable was negative ('"
+                        + value + "') — flagged for follow-up";
+
+            } else if (number > 1000) {
+
+                bedsAvailable = null;
+                notes = "bedsAvailable was unrealistic ('"
+                        + value + "') — flagged for follow-up";
+
+            } else {
+
+                bedsAvailable = number;
+                notes = null;
+            }
+
+        } catch (NumberFormatException e) {
+
+            bedsAvailable = null;
+            notes = "bedsAvailable was non-numeric ('"
+                    + value + "') — flagged for follow-up";
+        }
+    }
+
+    public String getWardId() {
+        return wardId;
+    }
+
+    public String getWing() {
+        return wing;
+    }
+
+    public String getDepartment() {
+        return department;
+    }
+
+    public Integer getBedsAvailable() {
+        return bedsAvailable;
     }
 
     public String getNotes() {
         return notes;
     }
 
-
-    public String getWardId() {
-        return wardId.trim().replaceAll("\\s+"," ");
-    }
-
-
-    public String getWing() {
-        return wing.trim().replaceAll("\\s+"," ");
-    }
-
-
-    public String getDepartment() {
-        return department.trim().replaceAll("\\s+"," ");
-    }
-
-
-    public String getBedsAvailable() {
-        return bedsAvailable;
-    }
-
-
-    private String returnNegativeSymbol(){
-        return "-";
-    }
-
     @Override
-    public String toString() {
+    public boolean equals(Object obj) {
 
-
-    return "{" + "\n"+
-        "wardId: " + this.getWardId() +"," + "\n" +
-        "wing: " + this.getWing() +  "," + "\n" + 
-        "department: " + this.getDepartment() +"," +"\n"+
-        "bedsAvailable: " + this.getBedsAvailable() +","+"\n" +
-        "notes: "+this.notes+ "\n" +
-            '}';
-    }
-
-    @Override
-    public boolean equals(Object obj){
-        if(this == obj){
+        if (this == obj) {
             return true;
         }
-        if(obj == null || this.getClass() != obj.getClass()){
+
+        if (obj == null || getClass() != obj.getClass()) {
             return false;
-        };
+        }
 
         Ward other = (Ward) obj;
 
-        boolean WardId = this.getWardId().equalsIgnoreCase(other.getWardId());
-        boolean wing = (this.getWing()).equalsIgnoreCase(other.getWing());
-
-        return WardId && wing;
+        return wardId.equalsIgnoreCase(other.wardId);
     }
- 
 
-
-    
-
-   
-    
+    @Override
+    public int hashCode() {
+        return wardId.toUpperCase().hashCode();
+    }
 }
