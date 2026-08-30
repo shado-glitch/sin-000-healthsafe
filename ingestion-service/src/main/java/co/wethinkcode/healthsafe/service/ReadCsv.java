@@ -2,7 +2,7 @@ package co.wethinkcode.healthsafe.service;
 
 import com.opencsv.CSVReader;
 import com.opencsv.exceptions.CsvValidationException;
-import co.wethinkcode.healthsafe.Model.Ward;
+import co.wethinkcode.healthsafe.model.Ward;
 
 import java.io.IOException;
 import java.io.InputStream;

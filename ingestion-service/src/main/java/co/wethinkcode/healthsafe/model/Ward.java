@@ -1,4 +1,4 @@
-package co.wethinkcode.healthsafe.Model;
+package co.wethinkcode.healthsafe.model;
 
 public class Ward {
 

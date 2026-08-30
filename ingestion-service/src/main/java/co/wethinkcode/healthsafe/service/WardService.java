@@ -1,7 +1,6 @@
-package co.wethinkcode.healthsafe.controller;
+package co.wethinkcode.healthsafe.service;
 
-import co.wethinkcode.healthsafe.Model.Ward;
-import co.wethinkcode.healthsafe.service.ReadCsv;
+import co.wethinkcode.healthsafe.model.Ward;
 
 import java.util.List;
 
