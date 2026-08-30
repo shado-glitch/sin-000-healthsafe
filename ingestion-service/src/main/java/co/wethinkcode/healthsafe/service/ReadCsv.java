@@ -36,14 +36,14 @@ public class ReadCsv {
                 }
 
                 if (row.length < 4) {
-                    System.out.println("Skipping malformed row: " + String.join(",", row));
+                    
                     continue;
                 }
 
                 Ward ward = new Ward(row[0], row[1], row[2], row[3]);
 
                 if (ward.getWardId() == null || ward.getWardId().isBlank()) {
-                    System.out.println("Skipping row with missing ward ID: " + String.join(",", row));
+                    
                     continue;
                 }
 
@@ -63,32 +63,20 @@ public class ReadCsv {
     }
     private void addWardIfNotDuplicate(Ward ward) {
 
-    System.out.println("Trying to add: " + ward.getWardId());
 
     for (Ward existingWard : wards) {
 
-        System.out.println(
-                "Comparing "
-                        + existingWard.getWardId()
-                        + " with "
-                        + ward.getWardId()
-        );
+       
 
         if (existingWard.getWardId().equalsIgnoreCase(ward.getWardId())) {
 
-            System.out.println(
-                    "DUPLICATE FOUND: " + ward.getWardId()
-            );
+            
 
             return;
         }
     }
 
     wards.add(ward);
-
-    System.out.println(
-            "ADDED: " + ward.getWardId()
-    );
 }
 
     private boolean isBlankRow(String[] row) {
