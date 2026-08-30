@@ -27,7 +27,7 @@ public class ReadCsv {
         try (BufferedReader reader =
                      new BufferedReader(new InputStreamReader(inputStream))) {
 
-            // Skip header
+           
             reader.readLine();
 
             String line;
