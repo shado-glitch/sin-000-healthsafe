@@ -1,6 +1,6 @@
 package co.wethinkcode.healthsafe;
 
-import co.wethinkcode.healthsafe.Model.Ward;
+import co.wethinkcode.healthsafe.model.Ward;
 import co.wethinkcode.healthsafe.service.ReadCsv;
 import org.junit.jupiter.api.Test;
 
@@ -16,7 +16,7 @@ class IngestionServiceTest {
 
         List<Ward> wards = readCsv.getWards();
 
-        // 17 CSV data rows, but W-05 is a duplicate, so 16 records remain.
+       
         assertEquals(17, wards.size());
 
         Ward ward = wards.stream()
