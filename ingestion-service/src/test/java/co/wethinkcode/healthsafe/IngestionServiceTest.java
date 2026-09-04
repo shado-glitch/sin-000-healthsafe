@@ -81,4 +81,31 @@ class IngestionServiceTest {
 
         assertEquals(1, w05Count);
     }
+    
+        
+    @Test
+    void duplicateWardIsKeptOnceAndDuplicateIsAddedToNotes() {
+        ReadCsv readCsv = new ReadCsv("wards-outdated.csv");
+
+        List<Ward> wards = readCsv.getWards();
+
+        Ward w05 = wards.stream()
+                .filter(ward -> ward.getWardId().equalsIgnoreCase("W-05"))
+                .findFirst()
+                .orElse(null);
+
+        assertNotNull(w05);
+
+        long w05Count = wards.stream()
+                .filter(ward -> ward.getWardId().equalsIgnoreCase("W-05"))
+                .count();
+
+        assertEquals(1, w05Count);
+
+        assertTrue(w05.getNotes().contains(
+                "Duplicate record detected: W-05"
+        ));
+    }
+
+
 }

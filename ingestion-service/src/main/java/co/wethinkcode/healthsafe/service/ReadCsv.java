@@ -69,9 +69,7 @@ public class ReadCsv {
        
 
         if (existingWard.getWardId().equalsIgnoreCase(ward.getWardId())) {
-
-            
-
+            existingWard.addNote("Duplicate record detected: " + ward.getWardId());
             return;
         }
     }

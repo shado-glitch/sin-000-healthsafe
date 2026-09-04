@@ -114,6 +114,19 @@ public class Ward {
         }
     }
 
+    public void addNote(String note) {
+        if (note == null || note.isBlank()) {
+            return;
+                }
+
+            if (notes == null || notes.isBlank()) {
+                notes = note;
+
+            } else {
+                notes = notes + "; " + note;
+            }
+        }
+
    
 
     public String getWardId() {
