@@ -58,6 +58,23 @@ out for (and handle) at least:
 - **Naming/spelling variants** for the same thing (e.g. regional spelling
   differences, synonyms)
 
+
+## Duplicate handling
+When a duplicate ward ID is found, the first record is retained and the duplicate is not added as a second Ward. Instead, a note is added to the existing ward:
+
+```json
+{
+  "wardId": "W-05",
+  "wing": "East Wing",
+  "department": "Paediatrics",
+  "bedsAvailable": 5,
+  "notes": "DUPLICATE: another record with the same ward ID was found"
+}
+
+```
+
+This allows the duplicate to be handled without silently ignoring the fact that it occurred.
+
 ## Project structure
 
 ```
@@ -85,10 +102,23 @@ parsing/cleaning logic is a TODO.
 
 ## Test
 
-No automated tests yet. Manually verify it's up:
+Automated JUnit 5 tests have been added to verify the cleaning and duplicate-handling behaviour.
+
+Run the tests with:
+```
+mvn test
+```
+
+The service can also be checked manually:
 
 ```
 curl http://localhost:7030/health   # -> OK
+```
+
+Cleaned ward records can be viewed with:
+
+```
+curl http://localhost:7030/wards
 ```
 
 To add real tests, add JUnit 5 + the Surefire plugin to `pom.xml`, put tests under
