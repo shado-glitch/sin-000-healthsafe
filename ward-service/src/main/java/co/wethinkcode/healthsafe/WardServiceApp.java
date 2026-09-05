@@ -5,6 +5,11 @@ import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
+import java.util.List;
+
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 import io.javalin.Javalin;
 
@@ -17,17 +22,59 @@ public class WardServiceApp {
 
         HttpClient client = creaHttpClient();
 
-        /*2. create request */
-
-        HttpRequest request = creatHttpRequest("http://localhost:7030/wards");
-
-        HttpResponse<String> response = sendHttpRequest(client, request);
-
         app.get("/health", ctx -> ctx.result("OK"));
 
         // TODO (Provides lists of wards and departments.)
         // Add domain endpoints for ward-service here.
-        app.get("/wards", ctx -> ctx.result(response.body()));
+        app.get("/wards", ctx -> {
+
+        HttpRequest request =
+                creatHttpRequest("http://localhost:7030/wards");
+
+        HttpResponse<String> response =
+                sendHttpRequest(client, request);
+
+        List<Ward> wards =
+                deserializeJson(response);
+
+        ctx.json(wards);});
+
+        app.get("/wards/{wardId}", ctx -> {
+
+            String wardId = ctx.pathParam("wardId");
+
+            HttpRequest request =creatHttpRequest("http://localhost:7030/wards");
+
+            HttpResponse<String> response =sendHttpRequest(client, request);
+
+            List<Ward> wards = deserializeJson(response);
+
+            for (Ward ward : wards) {
+                if (ward.getWardId().equalsIgnoreCase(wardId)) {
+                    ctx.json(ward);
+                    return;
+                }
+            }
+
+            ctx.status(404).result("Ward not found");
+           
+        });
+            
+
+    }
+
+
+    private static List<Ward> deserializeJson(HttpResponse<String> response){
+        ObjectMapper mapper = new ObjectMapper();
+
+        try {
+            return mapper.readValue(response.body(),new TypeReference<List<Ward>>() {});
+
+        } catch (JsonProcessingException e) {
+
+            throw new RuntimeException("Could not deserialize wards JSON", e);
+
+        }
 
     }
 
@@ -54,9 +101,8 @@ public class WardServiceApp {
             return  response;
 
         } catch (IOException | InterruptedException e) {
-           
-        } 
-            return  null ;   
+             throw new RuntimeException("Could not get wards from ingestion service", e);
+        }
     }
 }
 
