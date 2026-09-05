@@ -5,6 +5,7 @@ import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
+import java.util.ArrayList;
 import java.util.List;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -18,8 +19,6 @@ public class WardServiceApp {
     public static void main(String[] args) {
         Javalin app = Javalin.create().start(7031);
 
-        /*1. Create a HttpClient */
-
         HttpClient client = creaHttpClient();
 
         app.get("/health", ctx -> ctx.result("OK"));
@@ -28,37 +27,65 @@ public class WardServiceApp {
         // Add domain endpoints for ward-service here.
         app.get("/wards", ctx -> {
 
-        HttpRequest request =
-                creatHttpRequest("http://localhost:7030/wards");
+        HttpRequest request = creatHttpRequest("http://localhost:7030/wards");
 
-        HttpResponse<String> response =
-                sendHttpRequest(client, request);
+        HttpResponse<String> response = sendHttpRequest(client, request);
 
-        List<Ward> wards =
-                deserializeJson(response);
+        if (response.statusCode() != 200) {
+            ctx.status(502).result("Ingestion service unavailable");
+                return;
+        }
 
-        ctx.json(wards);});
+        List<Ward> wards = deserializeJson(response);
+
+        ctx.json(wards);
+
+        });
 
         app.get("/wards/{wardId}", ctx -> {
 
-            String wardId = ctx.pathParam("wardId");
+        String wardId = ctx.pathParam("wardId");
 
-            HttpRequest request =creatHttpRequest("http://localhost:7030/wards");
+        HttpRequest request =creatHttpRequest("http://localhost:7030/wards");
 
-            HttpResponse<String> response =sendHttpRequest(client, request);
+        HttpResponse<String> response =sendHttpRequest(client, request);
 
-            List<Ward> wards = deserializeJson(response);
+        List<Ward> wards = deserializeJson(response);
 
-            for (Ward ward : wards) {
-                if (ward.getWardId().equalsIgnoreCase(wardId)) {
-                    ctx.json(ward);
-                    return;
-                }
+        for (Ward ward : wards) {
+            if (ward.getWardId().equalsIgnoreCase(wardId)) {
+                ctx.json(ward);
+                return;
             }
+        }
 
-            ctx.status(404).result("Ward not found");
+        ctx.status(404).result("Ward not found");
            
         });
+
+        app.get("/departments", ctx -> {
+
+        HttpRequest request = creatHttpRequest("http://localhost:7030/wards");
+
+        HttpResponse<String> response = sendHttpRequest(client, request);
+
+        if (response.statusCode() != 200) {
+            ctx.status(502).result("Ingestion service unavailable");
+            return;
+        }
+
+        List<Ward> wards = deserializeJson(response);
+        List<String> departments = new ArrayList<String>();
+
+        for(Ward ward:wards){
+            if(!(departments.contains(ward.getDepartment()))){
+            departments.add(ward.getDepartment());
+            }
+        }
+
+
+        ctx.json(departments);
+});
             
 
     }
@@ -100,9 +127,13 @@ public class WardServiceApp {
 
             return  response;
 
-        } catch (IOException | InterruptedException e) {
+        } catch (IOException e) {
              throw new RuntimeException("Could not get wards from ingestion service", e);
-        }
+
+        }catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            throw new RuntimeException("Request to ingestion service was interrupted", e);
+    }
     }
 }
 
