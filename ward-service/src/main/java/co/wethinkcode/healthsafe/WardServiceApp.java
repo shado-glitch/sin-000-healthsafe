@@ -16,6 +16,8 @@ import io.javalin.Javalin;
 
 public class WardServiceApp {
 
+    private  static  String uri = "http://localhost:7030/wards" ;
+
     public static void main(String[] args) {
         Javalin app = Javalin.create().start(7031);
 
@@ -27,7 +29,7 @@ public class WardServiceApp {
         // Add domain endpoints for ward-service here.
         app.get("/wards", ctx -> {
 
-        HttpRequest request = creatHttpRequest("http://localhost:7030/wards");
+        HttpRequest request = creatHttpRequest(uri);
 
         HttpResponse<String> response = sendHttpRequest(client, request);
 
@@ -44,44 +46,48 @@ public class WardServiceApp {
 
         app.get("/wards/{wardId}", ctx -> {
 
-        String wardId = ctx.pathParam("wardId");
+            String wardId = ctx.pathParam("wardId");
+            HttpRequest request =creatHttpRequest(uri);
+            HttpResponse<String> response =sendHttpRequest(client, request);
 
-        HttpRequest request =creatHttpRequest("http://localhost:7030/wards");
-
-        HttpResponse<String> response =sendHttpRequest(client, request);
-
-        List<Ward> wards = deserializeJson(response);
-
-        for (Ward ward : wards) {
-            if (ward.getWardId().equalsIgnoreCase(wardId)) {
-                ctx.json(ward);
+            if (response.statusCode() != 200) {
+                ctx.status(502).result("Ingestion service unavailable");
                 return;
             }
-        }
 
-        ctx.status(404).result("Ward not found");
+            List<Ward> wards = deserializeJson(response);
+
+            for (Ward ward : wards) {
+
+                if (ward.getWardId().equalsIgnoreCase(wardId)) {
+                    ctx.json(ward);
+                    return;
+                }
+            }
+
+             ctx.status(404).result("Ward not found");
            
         });
 
         app.get("/departments", ctx -> {
 
-        HttpRequest request = creatHttpRequest("http://localhost:7030/wards");
+                HttpRequest request = creatHttpRequest(uri);
 
-        HttpResponse<String> response = sendHttpRequest(client, request);
+                HttpResponse<String> response = sendHttpRequest(client, request);
 
-        if (response.statusCode() != 200) {
-            ctx.status(502).result("Ingestion service unavailable");
-            return;
-        }
+                if (response.statusCode() != 200) {
+                    ctx.status(502).result("Ingestion service unavailable");
+                    return;
+                }
 
-        List<Ward> wards = deserializeJson(response);
-        List<String> departments = new ArrayList<String>();
+                List<Ward> wards = deserializeJson(response);
+                List<String> departments = new ArrayList<String>();
 
-        for(Ward ward:wards){
-            if(!(departments.contains(ward.getDepartment()))){
-            departments.add(ward.getDepartment());
-            }
-        }
+                for(Ward ward:wards){
+                    if(!(departments.contains(ward.getDepartment()))){
+                    departments.add(ward.getDepartment());
+                    }
+                }
 
 
         ctx.json(departments);
