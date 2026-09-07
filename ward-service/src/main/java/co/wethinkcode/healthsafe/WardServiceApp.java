@@ -21,7 +21,7 @@ public class WardServiceApp {
     public static void main(String[] args) {
         Javalin app = Javalin.create().start(7031);
 
-        HttpClient client = creaHttpClient();
+        HttpClient client = createHttpClient();
 
         app.get("/health", ctx -> ctx.result("OK"));
 
@@ -29,12 +29,17 @@ public class WardServiceApp {
         // Add domain endpoints for ward-service here.
         app.get("/wards", ctx -> {
 
-        HttpRequest request = creatHttpRequest(uri);
+        HttpRequest request = createHttpRequest(uri);
 
         HttpResponse<String> response = sendHttpRequest(client, request);
 
-        if (response.statusCode() != 200) {
+        if (response == null) {
             ctx.status(502).result("Ingestion service unavailable");
+                return;
+        }
+
+        if (response.statusCode() != 200) {
+                ctx.status(502).result("Ingestion service returned an error");
                 return;
         }
 
@@ -47,13 +52,19 @@ public class WardServiceApp {
         app.get("/wards/{wardId}", ctx -> {
 
             String wardId = ctx.pathParam("wardId");
-            HttpRequest request =creatHttpRequest(uri);
+            HttpRequest request =createHttpRequest(uri);
             HttpResponse<String> response =sendHttpRequest(client, request);
 
-            if (response.statusCode() != 200) {
+            if (response == null) {
                 ctx.status(502).result("Ingestion service unavailable");
                 return;
             }
+
+            if (response.statusCode() != 200) {
+                ctx.status(502).result("Ingestion service returned an error");
+                return;
+            }
+
 
             List<Ward> wards = deserializeJson(response);
 
@@ -71,27 +82,30 @@ public class WardServiceApp {
 
         app.get("/departments", ctx -> {
 
-                HttpRequest request = creatHttpRequest(uri);
+            HttpRequest request = createHttpRequest(uri);
 
-                HttpResponse<String> response = sendHttpRequest(client, request);
+            HttpResponse<String> response = sendHttpRequest(client, request);
 
-                if (response.statusCode() != 200) {
-                    ctx.status(502).result("Ingestion service unavailable");
-                    return;
+            if (response == null) {
+                ctx.status(502).result("Ingestion service unavailable");
+                return;
+            }
+
+            if (response.statusCode() != 200) {
+                ctx.status(502).result("Ingestion service returned an error");
+                return;
+            }
+
+            List<Ward> wards = deserializeJson(response);
+            List<String> departments = new ArrayList<String>();
+
+            for(Ward ward:wards){
+                if(ward.getDepartment() != null && !(departments.contains(ward.getDepartment()))){
+                departments.add(ward.getDepartment());
                 }
-
-                List<Ward> wards = deserializeJson(response);
-                List<String> departments = new ArrayList<String>();
-
-                for(Ward ward:wards){
-                    if(!(departments.contains(ward.getDepartment()))){
-                    departments.add(ward.getDepartment());
-                    }
-                }
-
-
-        ctx.json(departments);
-});
+            }
+            ctx.json(departments);
+        });
             
 
     }
@@ -112,13 +126,13 @@ public class WardServiceApp {
     }
 
 
-    private static HttpClient creaHttpClient(){
+    private static HttpClient createHttpClient(){
 
         return HttpClient.newHttpClient();
 
     }
 
-    private static  HttpRequest creatHttpRequest(String uri){
+    private static  HttpRequest createHttpRequest(String uri){
       return HttpRequest.newBuilder()
         .uri(URI.create(uri)) 
         .GET()
@@ -134,13 +148,13 @@ public class WardServiceApp {
             return  response;
 
         } catch (IOException e) {
-             throw new RuntimeException("Could not get wards from ingestion service", e);
+             return null;
 
         }catch (InterruptedException e) {
             Thread.currentThread().interrupt();
-            throw new RuntimeException("Request to ingestion service was interrupted", e);
-    }
-    }
+            return null;
+        }
+    } 
 }
 
 // MQ TODO: subscribes to ActiveMQ topic MqConfig.TOPIC at MqConfig.BROKER_URL (see co.wethinkcode.healthsafe.mq.MqConfig)
