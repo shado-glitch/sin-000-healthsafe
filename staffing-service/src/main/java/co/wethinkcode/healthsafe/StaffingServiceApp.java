@@ -96,7 +96,7 @@ public class StaffingServiceApp {
      *
      * This staffing policy is an implementation assumption.
      */
-    private static int calculateDoctors(int alertLevel) {
+    static int calculateDoctors(int alertLevel) {
         if (alertLevel <= 2) return 1;
         if (alertLevel <= 4) return 2;
         if (alertLevel <= 6) return 3;

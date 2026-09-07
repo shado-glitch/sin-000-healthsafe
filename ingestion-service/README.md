@@ -93,7 +93,6 @@ mvn package
 
 ## Run
 
-```
 java -jar target/ingestion-service.jar
 ```
 
