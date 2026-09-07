@@ -61,11 +61,18 @@ public class StaffingServiceApp {
                 return;
             }
 
-            JsonNode alert =MAPPER.readTree(alertResponse.body());
+            JsonNode alert = MAPPER.readTree(alertResponse.body());
+            JsonNode levelNode = alert.get("level");
 
-            int level = alert.get("level").asInt();
+            if (levelNode == null || !levelNode.isInt()) {
+                ctx.status(502).json(error("Invalid alert level response"));
+                return;
+            }
 
+            int level = levelNode.asInt();
             int doctorsRequired = calculateDoctors(level);
+
+            
             Map<String, Object> result =new LinkedHashMap<>();
 
             result.put("wardId", ward.get("wardId").asText());
@@ -78,20 +85,21 @@ public class StaffingServiceApp {
         });
     }
 
-     private static int calculateDoctors(int alertLevel) {
-
-        if (alertLevel <= 2) {
-            return 1;
-        }
-
-        if (alertLevel <= 4) {
-            return 2;
-        }
-
-        if (alertLevel <= 6) {
-            return 3;
-        }
-
+    /**
+     * Calculates the number of doctors required based on the alert level.
+     *
+     * Alert levels:
+     * 0-2 -> 1 doctor
+     * 3-4 -> 2 doctors
+     * 5-6 -> 3 doctors
+     * 7-8 -> 4 doctors
+     *
+     * This staffing policy is an implementation assumption.
+     */
+    private static int calculateDoctors(int alertLevel) {
+        if (alertLevel <= 2) return 1;
+        if (alertLevel <= 4) return 2;
+        if (alertLevel <= 6) return 3;
         return 4;
     }
 
