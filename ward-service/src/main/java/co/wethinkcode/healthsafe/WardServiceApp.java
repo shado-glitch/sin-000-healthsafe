@@ -12,6 +12,9 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
+import co.wethinkcode.healthsafe.mq.StaffingEventSubscriber;
+import co.wethinkcode.healthsafe.mq.StaffingUpdate;
+
 import io.javalin.Javalin;
 
 public class WardServiceApp {
@@ -22,6 +25,10 @@ public class WardServiceApp {
         Javalin app = Javalin.create().start(7031);
 
         HttpClient client = createHttpClient();
+
+        StaffingEventSubscriber.start();
+        Runtime.getRuntime().addShutdownHook(new Thread(StaffingEventSubscriber::stop));
+
 
         app.get("/health", ctx -> ctx.result("OK"));
 
@@ -53,7 +60,10 @@ public class WardServiceApp {
 
             String wardId = ctx.pathParam("wardId");
             HttpRequest request =createHttpRequest(uri);
+
             HttpResponse<String> response =sendHttpRequest(client, request);
+
+            
 
             if (response == null) {
                 ctx.status(502).result("Ingestion service unavailable");
@@ -79,6 +89,21 @@ public class WardServiceApp {
              ctx.status(404).result("Ward not found");
            
         });
+
+        app.get("/wards/{wardId}/staffing", ctx -> {
+
+            String wardId = ctx.pathParam("wardId");
+            StaffingUpdate update = StaffingEventSubscriber.getLatest(wardId);
+
+            if (update == null) {
+                ctx.status(404).result(
+                        "No staffing update received yet for ward '" + wardId + "'");
+                return;
+            }
+
+            ctx.json(update);
+        });
+
 
         app.get("/departments", ctx -> {
 
