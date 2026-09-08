@@ -7,10 +7,14 @@ import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
+import co.wethinkcode.healthsafe.mq.StaffingEvent;
+import co.wethinkcode.healthsafe.mq.StaffingEventPublisher;
 import io.javalin.Javalin;
 
 public class StaffingServiceApp {
@@ -20,8 +24,10 @@ public class StaffingServiceApp {
     private static final HttpClient CLIENT =HttpClient.newHttpClient();
     private static final ObjectMapper MAPPER =new ObjectMapper();
 
+    private static final Map<String, Integer> lastKnownDoctors = new ConcurrentHashMap<>();
     public static void main(String[] args) {
         Javalin app = Javalin.create().start(7033);
+        
 
         app.get("/health", ctx -> ctx.result("OK"));
 
@@ -71,6 +77,9 @@ public class StaffingServiceApp {
 
             int level = levelNode.asInt();
             int doctorsRequired = calculateDoctors(level);
+            String resolvedWardId = ward.get("wardId").asText();
+
+            publishIfChanged(resolvedWardId, level, doctorsRequired);
 
             
             Map<String, Object> result =new LinkedHashMap<>();
@@ -101,6 +110,26 @@ public class StaffingServiceApp {
         if (alertLevel <= 4) return 2;
         if (alertLevel <= 6) return 3;
         return 4;
+    }
+
+     private static void publishIfChanged(String wardId, int alertLevel, int doctorsRequired) {
+ 
+        Integer previous = lastKnownDoctors.put(wardId, doctorsRequired);
+ 
+        if (previous != null && previous == doctorsRequired) {
+            return;
+        }
+ 
+        StaffingEvent event = new StaffingEvent(wardId, alertLevel, doctorsRequired);
+ 
+        try {
+            String json = MAPPER.writeValueAsString(event);
+            StaffingEventPublisher.publish(json);
+        } catch (JsonProcessingException e) {
+            // Don't let a serialization hiccup break the HTTP response —
+            // the client still gets their staffing answer either way.
+            System.err.println("Failed to serialize staffing event: " + e.getMessage());
+        }
     }
 
     private static HttpResponse<String> createHttpRequest(String url) {
