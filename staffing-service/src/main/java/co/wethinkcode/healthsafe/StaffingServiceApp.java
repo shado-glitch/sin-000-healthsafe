@@ -31,7 +31,7 @@ public class StaffingServiceApp {
          app.get("/staffing/{wardId}", ctx -> {
 
             String wardId = ctx.pathParam("wardId");
-            HttpResponse<String> wardResponse =sendGet(WARD_SERVICE + wardId);
+            HttpResponse<String> wardResponse =createHttpRequest(WARD_SERVICE + wardId);
 
             if (wardResponse == null) {
                 ctx.status(502).json(error("Ward service unavailable"));
@@ -49,7 +49,7 @@ public class StaffingServiceApp {
             }
 
             JsonNode ward = MAPPER.readTree(wardResponse.body());
-            HttpResponse<String> alertResponse =sendGet(ALERT_LEVEL_SERVICE);
+            HttpResponse<String> alertResponse =createHttpRequest(ALERT_LEVEL_SERVICE);
 
             if (alertResponse == null) {
                 ctx.status(502).json(error("Alert level service unavailable"));
@@ -103,7 +103,7 @@ public class StaffingServiceApp {
         return 4;
     }
 
-    private static HttpResponse<String> sendGet(String url) {
+    private static HttpResponse<String> createHttpRequest(String url) {
 
         try {
 
