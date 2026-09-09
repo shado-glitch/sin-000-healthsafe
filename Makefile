@@ -64,7 +64,7 @@ build:
 test:
 	@for s in $(ALL_SERVICES); do \
 		echo "==> testing $$s"; \
-		(cd $$s && mvn  test) || exit 1; \
+		(cd $$s && mvn -q test) || exit 1; \
 	done
 
 clean:
@@ -101,7 +101,11 @@ define run_service
 			(cd $$svc && mvn -q package) || exit 1; \
 		fi; \
 		echo "==> starting $$svc on port $$port"; \
-		(cd $$svc && nohup java -jar target/$$svc.jar > ../$(LOG_DIR)/$$svc.log 2>&1 & echo $$! > ../$(PID_DIR)/$$svc.pid); \
+		cd $$svc; \
+		nohup java -jar target/$$svc.jar > ../$(LOG_DIR)/$$svc.log 2>&1 & \
+		pid=$$!; \
+		cd ..; \
+		echo $$pid > $(PID_DIR)/$$svc.pid; \
 		ok=0; \
 		for i in $$(seq 1 20); do \
 			if curl -sf --max-time 2 http://localhost:$$port/health >/dev/null 2>&1; then ok=1; break; fi; \
