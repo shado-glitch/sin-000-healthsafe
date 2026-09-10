@@ -20,6 +20,7 @@ import io.javalin.Javalin;
 public class WardServiceApp {
 
     private  static  String uri = "http://localhost:7030/wards" ;
+    private static final java.util.Set<String> reportedFailures = java.util.concurrent.ConcurrentHashMap.newKeySet();
 
     public static void main(String[] args) {
         Javalin app = Javalin.create().start(7031);
@@ -179,16 +180,29 @@ public class WardServiceApp {
                 return;
             }
 
-            EquipmentFailurePublisher.publish(
-                    wardId.trim().toUpperCase(),
-                    failure.getEquipment().trim(),
-                    failure.getMessage().trim()
-            );
+            String cleanWardId = wardId.trim().toUpperCase();
+            String cleanEquipment = failure.getEquipment().trim();
+            String cleanMessage = failure.getMessage().trim();
+
+            String failureKey =
+            cleanWardId + "|" + cleanEquipment + "|" + cleanMessage;
+
+            if (!reportedFailures.add(failureKey)) {
+                ctx.status(200).json(java.util.Map.of(
+                "status", "duplicate",
+                "wardId", cleanWardId,
+                "message", "This equipment failure has already been reported"
+                ));
+                return;
+            }
+
+            EquipmentFailurePublisher.publish(cleanWardId,cleanEquipment,cleanMessage);
 
             ctx.status(202).json(java.util.Map.of(
-                    "status", "queued",
-                    "wardId", wardId.trim().toUpperCase()
+            "status", "queued",
+            "wardId", cleanWardId
             ));
+
         });
             
 

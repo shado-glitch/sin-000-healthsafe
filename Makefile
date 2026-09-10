@@ -213,16 +213,19 @@ verify-stage3:
 	@echo "ActiveMQ console: http://localhost:8161 (admin/admin) — check staffing-events-topic"
 
 verify-stage4:
+	@echo "=== Stage 4: Equipment Failure Queue ==="
+	@echo
 	@echo "--- equipment-alert-service (:7034) ---"
 	@curl -s --max-time 5 http://localhost:7034/health; echo
-	@echo "-> reporting an equipment failure from ward-service:"
+	@echo
+	@echo "--- Step 1: Report equipment failure ---"
 	@curl -s --max-time 5 -X POST http://localhost:7031/wards/W-05/equipment-failure \
 		-H 'Content-Type: application/json' \
 		-d '{"equipment":"Ventilator-12","message":"Ventilator stopped responding"}' \
 		| (command -v jq >/dev/null && jq . || cat); echo
+	@echo
 	@sleep 1
-	@echo "-> alerts consumed by equipment-alert-service:"
+	@echo "--- Step 2: Confirm equipment-alert-service consumed it ---"
 	@curl -s --max-time 5 http://localhost:7034/alerts \
 		| (command -v jq >/dev/null && jq . || cat); echo
-	@echo "The producer uses PERSISTENT delivery and the consumer uses CLIENT_ACKNOWLEDGE."
-	@echo "To demonstrate persistence, stop equipment-alert-service, POST another failure, restart it, and GET /alerts."
+	
