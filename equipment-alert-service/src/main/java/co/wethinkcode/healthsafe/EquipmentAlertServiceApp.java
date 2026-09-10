@@ -1,18 +1,50 @@
 package co.wethinkcode.healthsafe;
 
+import java.util.List;
+import java.util.concurrent.CopyOnWriteArrayList;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
+
+import co.wethinkcode.healthsafe.mq.EquipmentFailureConsumer;
 import io.javalin.Javalin;
+import io.javalin.json.JavalinJackson;
 
 public class EquipmentAlertServiceApp {
 
+    private static final List<EquipmentFailureAlert> receivedAlerts =
+            new CopyOnWriteArrayList<>();
+
+    private static final ObjectMapper MAPPER = new ObjectMapper();
+
     public static void main(String[] args) {
-        Javalin app = Javalin.create().start(7034);
+
+        Javalin app = Javalin.create(config -> {
+            config.jsonMapper(new JavalinJackson(MAPPER));
+        }).start(7034);
 
         app.get("/health", ctx -> ctx.result("OK"));
 
-        // TODO (Uses a Queue to guarantee delivery of critical medical equipment failure alerts.)
-        // Mechanism: ActiveMQ Queue (guaranteed delivery)
+        EquipmentFailureConsumer.start(body -> {
+
+            try {
+                EquipmentFailureAlert alert =
+                        MAPPER.readValue(body, EquipmentFailureAlert.class);
+
+                receivedAlerts.add(alert);
+
+            } catch (Exception e) {
+
+                System.err.println(
+                        "Could not convert equipment alert: "
+                        + e.getMessage()
+                );
+            }
+        });
+
+        Runtime.getRuntime().addShutdownHook(
+                new Thread(EquipmentFailureConsumer::stop));
+
+        app.get("/alerts", ctx -> ctx.json(receivedAlerts));
     }
 }
 
-// MQ TODO: consumes ActiveMQ queue MqConfig.QUEUE at MqConfig.BROKER_URL (see co.wethinkcode.healthsafe.mq.MqConfig)
-// Producer: ward-service publishes here when it detects an equipment failure on one of its wards.

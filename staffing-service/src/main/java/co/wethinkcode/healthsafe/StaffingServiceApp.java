@@ -25,6 +25,7 @@ public class StaffingServiceApp {
     private static final ObjectMapper MAPPER =new ObjectMapper();
 
     private static final Map<String, Integer> lastKnownDoctors = new ConcurrentHashMap<>();
+    private static final Map<String, Integer> lastKnownAlertLevels = new ConcurrentHashMap<>();
     public static void main(String[] args) {
         Javalin app = Javalin.create().start(7033);
         
@@ -113,25 +114,41 @@ public class StaffingServiceApp {
         return 4;
     }
 
-     private static void publishIfChanged(String wardId, int alertLevel, int doctorsRequired) {
- 
-        Integer previous = lastKnownDoctors.put(wardId, doctorsRequired);
- 
-        if (previous != null && previous == doctorsRequired) {
-            return;
-        }
- 
-        StaffingEvent event = new StaffingEvent(wardId, alertLevel, doctorsRequired);
- 
-        try {
-            String json = MAPPER.writeValueAsString(event);
-            StaffingEventPublisher.publish(json);
-        } catch (JsonProcessingException e) {
-            // Don't let a serialization hiccup break the HTTP response —
-            // the client still gets their staffing answer either way.
-            System.err.println("Failed to serialize staffing event: " + e.getMessage());
-        }
+    private static void publishIfChanged(String wardId, int alertLevel, int doctorsRequired) {
+
+    Integer previousDoctors = lastKnownDoctors.get(wardId);
+    Integer previousAlertLevel = lastKnownAlertLevels.get(wardId);
+
+    // Nothing changed, so don't publish another event
+    if (previousDoctors != null
+            && previousAlertLevel != null
+            && previousDoctors == doctorsRequired
+            && previousAlertLevel == alertLevel) {
+        return;
     }
+
+    StaffingEvent event = new StaffingEvent(
+            wardId,
+            alertLevel,
+            doctorsRequired
+    );
+
+    try {
+        String json = MAPPER.writeValueAsString(event);
+
+        StaffingEventPublisher.publish(json);
+
+        // Remember the new values AFTER publishing
+        lastKnownDoctors.put(wardId, doctorsRequired);
+        lastKnownAlertLevels.put(wardId, alertLevel);
+
+    } catch (JsonProcessingException e) {
+        System.err.println(
+                "Failed to serialize staffing event: " + e.getMessage()
+        );
+    }
+}
+     
 
     private static HttpResponse<String> createHttpRequest(String url) {
 

@@ -12,9 +12,9 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
+import co.wethinkcode.healthsafe.mq.EquipmentFailurePublisher;
 import co.wethinkcode.healthsafe.mq.StaffingEventSubscriber;
 import co.wethinkcode.healthsafe.mq.StaffingUpdate;
-
 import io.javalin.Javalin;
 
 public class WardServiceApp {
@@ -130,6 +130,65 @@ public class WardServiceApp {
                 }
             }
             ctx.json(departments);
+        });
+
+        app.post("/wards/{wardId}/equipment-failure", ctx -> {
+
+            String wardId = ctx.pathParam("wardId");
+
+            // The request body describes what ward-service has detected.
+            EquipmentFailureRequest failure =
+                    ctx.bodyAsClass(EquipmentFailureRequest.class);
+
+            if (failure.getEquipment() == null || failure.getEquipment().isBlank()) {
+                ctx.status(400).result("equipment is required");
+                return;
+            }
+
+            if (failure.getMessage() == null || failure.getMessage().isBlank()) {
+                ctx.status(400).result("message is required");
+                return;
+            }
+
+            // Confirm that this ward exists before publishing an alert.
+            HttpRequest wardRequest = createHttpRequest(uri);
+            HttpResponse<String> wardResponse = sendHttpRequest(client, wardRequest);
+
+            if (wardResponse == null) {
+                ctx.status(502).result("Ingestion service unavailable");
+                return;
+            }
+
+            if (wardResponse.statusCode() != 200) {
+                ctx.status(502).result("Ingestion service returned an error");
+                return;
+            }
+
+            List<Ward> wards = deserializeJson(wardResponse);
+            boolean wardExists = false;
+
+            for (Ward ward : wards) {
+                if (ward.getWardId() != null && ward.getWardId().equalsIgnoreCase(wardId)) {
+                    wardExists = true;
+                    break;
+                }
+            }
+
+            if (!wardExists) {
+                ctx.status(404).result("Ward not found");
+                return;
+            }
+
+            EquipmentFailurePublisher.publish(
+                    wardId.trim().toUpperCase(),
+                    failure.getEquipment().trim(),
+                    failure.getMessage().trim()
+            );
+
+            ctx.status(202).json(java.util.Map.of(
+                    "status", "queued",
+                    "wardId", wardId.trim().toUpperCase()
+            ));
         });
             
 

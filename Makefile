@@ -213,6 +213,16 @@ verify-stage3:
 	@echo "ActiveMQ console: http://localhost:8161 (admin/admin) — check staffing-events-topic"
 
 verify-stage4:
-	@echo "Stage 4 is stretch scope; wire the ward-service equipment-failure trigger"
-	@echo "and re-run this target once there's an endpoint/event to exercise, e.g.:"
-	@echo "  curl -s --max-time 5 http://localhost:7034/health"
+	@echo "--- equipment-alert-service (:7034) ---"
+	@curl -s --max-time 5 http://localhost:7034/health; echo
+	@echo "-> reporting an equipment failure from ward-service:"
+	@curl -s --max-time 5 -X POST http://localhost:7031/wards/W-05/equipment-failure \
+		-H 'Content-Type: application/json' \
+		-d '{"equipment":"Ventilator-12","message":"Ventilator stopped responding"}' \
+		| (command -v jq >/dev/null && jq . || cat); echo
+	@sleep 1
+	@echo "-> alerts consumed by equipment-alert-service:"
+	@curl -s --max-time 5 http://localhost:7034/alerts \
+		| (command -v jq >/dev/null && jq . || cat); echo
+	@echo "The producer uses PERSISTENT delivery and the consumer uses CLIENT_ACKNOWLEDGE."
+	@echo "To demonstrate persistence, stop equipment-alert-service, POST another failure, restart it, and GET /alerts."
