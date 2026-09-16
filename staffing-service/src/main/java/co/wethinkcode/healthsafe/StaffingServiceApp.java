@@ -25,7 +25,7 @@ public class StaffingServiceApp {
     private static final ObjectMapper MAPPER =new ObjectMapper();
 
     private static final Map<String, Integer> lastKnownDoctors = new ConcurrentHashMap<>();
-    private static final Map<String, Integer> lastKnownAlertLevels = new ConcurrentHashMap<>();
+   
     public static void main(String[] args) {
         Javalin app = Javalin.create().start(7033);
         
@@ -116,36 +116,29 @@ public class StaffingServiceApp {
 
     private static void publishIfChanged(String wardId, int alertLevel, int doctorsRequired) {
 
-    Integer previousDoctors = lastKnownDoctors.get(wardId);
-    Integer previousAlertLevel = lastKnownAlertLevels.get(wardId);
+        Integer previousDoctors = lastKnownDoctors.get(wardId);
 
-    // Nothing changed, so don't publish another event
-    if (previousDoctors != null
-            && previousAlertLevel != null
-            && previousDoctors == doctorsRequired
-            && previousAlertLevel == alertLevel) {
-        return;
-    }
 
-    StaffingEvent event = new StaffingEvent(
-            wardId,
-            alertLevel,
-            doctorsRequired
-    );
+        // Nothing changed, so don't publish another event
+        if (previousDoctors != null && previousDoctors == doctorsRequired) {
+            return;
+        }
 
-    try {
-        String json = MAPPER.writeValueAsString(event);
+        StaffingEvent event = new StaffingEvent(wardId,alertLevel,doctorsRequired);
 
-        StaffingEventPublisher.publish(json);
+        try {
+            String json = MAPPER.writeValueAsString(event);
 
-        // Remember the new values AFTER publishing
-        lastKnownDoctors.put(wardId, doctorsRequired);
-        lastKnownAlertLevels.put(wardId, alertLevel);
+            StaffingEventPublisher.publish(json);
 
-    } catch (JsonProcessingException e) {
-        System.err.println(
-                "Failed to serialize staffing event: " + e.getMessage()
-        );
+            // Remember the new values AFTER publishing
+            lastKnownDoctors.put(wardId, doctorsRequired);
+        
+
+        } catch (JsonProcessingException e) {
+            System.err.println(
+                    "Failed to serialize staffing event: " + e.getMessage()
+            );
     }
 }
      

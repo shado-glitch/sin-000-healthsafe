@@ -121,18 +121,37 @@ define run_service
 endef
 
 run-ingestion:
-	$(call run_service,$(INGESTION))
+	cd ingestion-service && java -jar target/ingestion-service.jar
+
+
+run-ingestion:
+	cd ingestion-service && java -jar target/ingestion-service.jar
 
 run-ward:
-	$(call run_service,$(WARD))
+	cd ward-service && java -jar target/ward-service.jar
 
 run-alert:
-	$(call run_service,$(ALERT))
+	cd alert-level-service && java -jar target/alert-level-service.jar
 
 run-staffing:
-	$(call run_service,$(STAFFING))
+	cd staffing-service && java -jar target/staffing-service.jar
 
 run-equipment:
+	cd equipment-alert-service && java -jar target/equipment-alert-service.jar
+
+run-ingestion-q:
+	$(call run_service,$(INGESTION))
+
+run-ward-q:
+	$(call run_service,$(WARD))
+
+run-alert-q:
+	$(call run_service,$(ALERT))
+
+run-staffing-q:
+	$(call run_service,$(STAFFING))
+
+run-equipment-q:
 	$(call run_service,$(EQUIPMENT))
 
 # --- staged run targets, in dependency order --------------------------------
@@ -163,17 +182,18 @@ status:
 	done
 
 stop-all:
-	@for s in $(ALL_SERVICES); do \
-		if [ -f $(PID_DIR)/$$s.pid ]; then \
-			pid=$$(cat $(PID_DIR)/$$s.pid); \
-			if kill -0 $$pid 2>/dev/null; then \
-				echo "stopping $$s (pid $$pid)"; \
-				kill $$pid; \
-			fi; \
-			rm -f $(PID_DIR)/$$s.pid; \
+	@echo "==> Stopping HealthSafe services..."
+	@for port in 7030 7031 7032 7033 7034; do \
+		pids=$$(lsof -ti :$$port 2>/dev/null || true); \
+		if [ -n "$$pids" ]; then \
+			echo "stopping process(es) on port $$port: $$pids"; \
+			kill $$pids 2>/dev/null || true; \
+		else \
+			echo "nothing running on port $$port"; \
 		fi; \
 	done
-
+	@rm -rf $(PID_DIR)
+	@echo "==> All HealthSafe services stopped."
 # --- verification helpers -----------------------------------------------------
 # These mirror the manual curl checks used to review each stage.
 

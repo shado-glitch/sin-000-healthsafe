@@ -36,10 +36,21 @@ public class EquipmentAlertServiceApp {
 
                 System.err.println(
                         "Could not convert equipment alert: "
-                        + e.getMessage()
+                                + e.getMessage()
+                );
+
+                // Important:
+                // Throw the error so EquipmentFailureConsumer knows
+                // that processing failed and does NOT acknowledge
+                // the JMS message.
+                throw new RuntimeException(
+                        "Failed to process equipment failure alert",
+                        e
                 );
             }
         });
+
+
 
         Runtime.getRuntime().addShutdownHook(
                 new Thread(EquipmentFailureConsumer::stop));
