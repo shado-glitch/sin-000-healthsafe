@@ -58,7 +58,7 @@ help:
 build:
 	@for s in $(ALL_SERVICES); do \
 		echo "==> building $$s"; \
-		(cd $$s && mvn -q package) || exit 1; \
+		(cd $$s && mvn -q clean package) || exit 1; \
 	done
 
 test:
