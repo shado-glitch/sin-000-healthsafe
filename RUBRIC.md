@@ -55,3 +55,5 @@ ward-service or alert-level-service, or does it assume the happy path?
 - [ ] Any tests added are meaningful, not padding
 - [ ] Candidate flags assumptions/tradeoffs they made (e.g. duplicate-merge strategy)
       rather than silently picking one
+
+Verfication code =      WTC-JAD5EQAG
